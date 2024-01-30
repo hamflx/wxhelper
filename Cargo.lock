@@ -474,5 +474,6 @@ dependencies = [
  "log",
  "simplelog",
  "sysinfo",
+ "widestring",
  "windows",
 ]

@@ -1,8 +1,9 @@
-use std::fs::File;
+use std::{fs::File, marker::PhantomData};
 
 use log::{error, info, LevelFilter};
 use simplelog::{Config, WriteLogger};
 use sysinfo::System;
+use widestring::{U16Str, U16String};
 use windows::Win32::{
     Foundation::BOOL,
     System::Threading::{OpenProcess, PROCESS_ALL_ACCESS},
@@ -29,6 +30,32 @@ pub extern "system" fn enable_hook(_: usize) -> usize {
     }
 
     0
+}
+
+type SendTextMsg = extern "system" fn(u64, u64, u64, u64, u64, u64, u64, u64) -> u64;
+type GetSendMessageMgr = extern "system" fn() -> u64;
+
+#[repr(C)]
+struct WeChatString<'a> {
+    ptr: *const u16,
+    length: u32,
+    max_length: u32,
+    c_ptr: u64,
+    c_len: u32,
+    phantom: PhantomData<&'a U16Str>,
+}
+
+impl<'a> WeChatString<'a> {
+    fn new(text: &'a U16Str) -> Self {
+        Self {
+            ptr: text.as_ptr(),
+            length: text.len() as _,
+            max_length: text.len() as _,
+            c_ptr: 0,
+            c_len: 0,
+            phantom: PhantomData,
+        }
+    }
 }
 
 fn start() -> Result<(), String> {
@@ -62,9 +89,35 @@ fn start() -> Result<(), String> {
     )
     .map_err(|err| format!("{err}"))?;
     let lib_base = lib.module_base();
+    info!("lib_base => 0x{:x}", lib_base);
+
     let kSendTextMsg = 0xfcd8d0;
-    let send = lib_base + kSendTextMsg;
-    info!("send => 0x{:x}", send);
+    let kGetSendMessageMgr = 0x8c00e0;
+    let send: SendTextMsg = unsafe { std::mem::transmute(lib_base + kSendTextMsg) };
+    let mgr: GetSendMessageMgr = unsafe { std::mem::transmute(lib_base + kGetSendMessageMgr) };
+    info!("send => {:?}", send);
+    info!("mgr => {:?}", mgr);
+
+    mgr();
+    info!("mgr success");
+
+    let chat_msg = [0u8; 0x460];
+    let temp = [0u64; 3];
+    let to_user = U16String::from_str("filehelper");
+    let to_user = WeChatString::new(to_user.as_ustr());
+    let text_msg = U16String::from_str("text_msg");
+    let text_msg = WeChatString::new(text_msg.as_ustr());
+    send(
+        chat_msg.as_ptr() as _,
+        &to_user as *const _ as _,
+        &text_msg as *const _ as _,
+        temp.as_ptr() as _,
+        1,
+        1,
+        0,
+        0,
+    );
+    info!("send success");
 
     Ok(())
 }
