@@ -17,17 +17,7 @@ fn main() {
     let handle = unsafe { OpenProcess(PROCESS_ALL_ACCESS, BOOL(0), pid) }.unwrap();
     let handle = injectors::process::ProcessHandle::from_handle(handle.0);
     handle
-        .inject_to_process(
-            &None,
-            Path::new(env!("CARGO_MANIFEST_DIR"))
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .join("target\\debug\\wx_payload.dll")
-                .to_str()
-                .unwrap(),
-        )
+        .inject_to_process(&None, env!("CARGO_CDYLIB_FILE_WX_PAYLOAD_wx-payload"))
         .map_err(|_| std::io::Error::last_os_error())
         .unwrap();
 }

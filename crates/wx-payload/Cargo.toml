@@ -9,3 +9,8 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+injectors = { path = "D:\\repos\\injectors" }
+log = "0.4.20"
+sysinfo = "0.30.5"
+windows = { version = "0.52.0", features = ["Win32_Foundation"] }
+simplelog = "0.12.1"
