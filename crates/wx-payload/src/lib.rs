@@ -78,7 +78,7 @@ fn start() -> Result<(), String> {
         .ok_or_else(|| format!("No parent"))?
         .parent()
         .ok_or_else(|| format!("No parent"))?
-        .join("[3.9.9.35]")
+        .join("[3.9.5.81]")
         .join("WeChatWin.dll");
     info!("WeChatWin.dll => {}", we_chat_win_path.display());
 
