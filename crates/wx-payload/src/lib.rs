@@ -87,7 +87,10 @@ fn start() -> Result<(), String> {
             .to_str()
             .ok_or_else(|| format!("No we_chat_win_path"))?,
     )
-    .map_err(|err| format!("{err}"))?;
+    .map_err(|err| match err.code() {
+        Some(code) => format!("{}", std::io::Error::from_raw_os_error(code as _)),
+        None => format!("{err}"),
+    })?;
     let lib_base = lib.module_base();
     info!("lib_base => 0x{:x}", lib_base);
 
