@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use log::info;
+use simplelog::{ColorChoice, Config, LevelFilter, TermLogger, TerminalMode};
 use sysinfo::System;
 use windows::Win32::{
     Foundation::BOOL,
@@ -7,6 +9,16 @@ use windows::Win32::{
 };
 
 fn main() {
+    TermLogger::init(
+        LevelFilter::Info,
+        Config::default(),
+        TerminalMode::Mixed,
+        ColorChoice::Auto,
+    )
+    .unwrap();
+
+    info!("Search WeChat.exe ...");
+
     let mut sys = System::new_all();
 
     sys.refresh_processes();
