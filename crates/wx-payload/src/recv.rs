@@ -44,11 +44,8 @@ pub(crate) fn install_recv_hooks() -> Result<HookGuard> {
             |a, b, c| {
                 info!("Call on recv: 0x{:x}, {:?}, 0x{:x}", a, b, c);
                 let params = b.read();
-                let full_content = params.full_content.read();
-                info!(
-                    "len: {}, max_len: {}",
-                    full_content.len, full_content.max_len
-                );
+                let full_content = params.full_content.read().to_string();
+                info!("full_content: {}", full_content);
                 Test.call(a, b, c)
             },
         )?
@@ -76,10 +73,24 @@ struct RecvParams {
 }
 
 struct WeChatStr {
-    ptr: *const usize,
+    ptr: *const u8,
     f2: usize,
     len: usize,
     max_len: usize,
+}
+
+impl ToString for WeChatStr {
+    fn to_string(&self) -> String {
+        if self.max_len | 0xf == 0xf {
+            String::from_utf8_lossy(unsafe {
+                std::slice::from_raw_parts(&self as *const _ as *const u8, self.len)
+            })
+            .into()
+        } else {
+            String::from_utf8_lossy(unsafe { std::slice::from_raw_parts(self.ptr, self.len) })
+                .into()
+        }
+    }
 }
 
 pub(crate) struct HookGuard {}
