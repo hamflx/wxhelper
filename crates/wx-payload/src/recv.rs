@@ -48,6 +48,8 @@ pub(crate) fn install_recv_hooks() -> Result<HookGuard> {
     };
     unsafe { Test.enable() }?;
 
+    info!("hook installed");
+
     Ok(HookGuard {})
 }
 
@@ -56,7 +58,9 @@ pub(crate) struct HookGuard {}
 impl Drop for HookGuard {
     fn drop(&mut self) {
         match unsafe { Test.disable() } {
-            Ok(_) => {}
+            Ok(_) => {
+                info!("hook installed")
+            }
             Err(err) => error!("Unable to disable hook: {}", err),
         }
     }
