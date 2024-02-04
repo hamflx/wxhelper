@@ -36,7 +36,7 @@ pub extern "system" fn enable_hook(_: usize) -> usize {
 }
 
 fn start() -> Result<()> {
-    install_recv_hooks()?;
+    let hook = install_recv_hooks()?;
 
     let rt = actix_web::rt::Runtime::new().map_err(|err| anyhow!("{err}"))?;
     let (sender, mut receiver) = tokio::sync::mpsc::channel::<&'static str>(1);
@@ -48,6 +48,9 @@ fn start() -> Result<()> {
         handle.stop(true).await;
     });
     let (r, _) = rt.block_on(async { tokio::join!(server_task, shutdown_task) });
-    Ok(r.map_err(|err| anyhow!("{err}"))
-        .and_then(|r| r.map_err(|err| anyhow!("{err}")))?)
+    r.map_err(|err| anyhow!("{err}"))
+        .and_then(|r| r.map_err(|err| anyhow!("{err}")))?;
+
+    drop(hook);
+    Ok(())
 }
