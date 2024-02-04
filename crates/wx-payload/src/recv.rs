@@ -59,7 +59,7 @@ impl Drop for HookGuard {
     fn drop(&mut self) {
         match unsafe { Test.disable() } {
             Ok(_) => {
-                info!("hook installed")
+                info!("hook uninstalled")
             }
             Err(err) => error!("Unable to disable hook: {}", err),
         }
