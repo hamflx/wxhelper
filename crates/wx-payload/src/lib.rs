@@ -1,9 +1,13 @@
+mod offsets;
+mod recv;
 mod server;
 mod wx;
 
 use std::fs::File;
 
+use anyhow::{anyhow, Result};
 use log::{error, info, LevelFilter};
+use recv::install_recv_hooks;
 use simplelog::{Config, WriteLogger};
 
 use crate::server::start_http_server;
@@ -31,8 +35,10 @@ pub extern "system" fn enable_hook(_: usize) -> usize {
     0
 }
 
-fn start() -> Result<(), String> {
-    let rt = actix_web::rt::Runtime::new().map_err(|err| format!("{err}"))?;
+fn start() -> Result<()> {
+    install_recv_hooks()?;
+
+    let rt = actix_web::rt::Runtime::new().map_err(|err| anyhow!("{err}"))?;
     let (sender, mut receiver) = tokio::sync::mpsc::channel::<&'static str>(1);
     let server = start_http_server(sender).unwrap();
     let handle = server.handle();
@@ -42,6 +48,6 @@ fn start() -> Result<(), String> {
         handle.stop(true).await;
     });
     let (r, _) = rt.block_on(async { tokio::join!(server_task, shutdown_task) });
-    r.map_err(|err| format!("{err}"))
-        .and_then(|r| r.map_err(|err| format!("{err}")))
+    Ok(r.map_err(|err| anyhow!("{err}"))
+        .and_then(|r| r.map_err(|err| anyhow!("{err}")))?)
 }

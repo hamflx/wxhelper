@@ -17,3 +17,5 @@ simplelog = "0.12.1"
 widestring = "1.0.2"
 actix-web = "4"
 tokio = { version = "1", features = ["macros"] }
+retour = { version = "0.3", features = ["static-detour"] }
+anyhow = "1.0.79"
