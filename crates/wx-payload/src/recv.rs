@@ -108,7 +108,7 @@ impl ToString for WeChatStr {
         );
         if self.max_len | 0xf == 0xf {
             String::from_utf8_lossy(unsafe {
-                std::slice::from_raw_parts(&self as *const _ as *const u8, self.len)
+                std::slice::from_raw_parts(&self.ptr as *const _ as *const u8, self.len)
             })
             .into()
         } else {
