@@ -11,10 +11,10 @@ type SendTextMsg = extern "system" fn(u64, u64, u64, u64, u64, u64, u64, u64) ->
 type GetSendMessageMgr = extern "system" fn() -> u64;
 
 #[repr(C)]
-struct WeChatString<'a> {
+pub(crate) struct WeChatString<'a> {
     ptr: *const u16,
-    length: u32,
-    max_length: u32,
+    pub(crate) length: u32,
+    pub(crate) max_length: u32,
     c_ptr: u64,
     c_len: u32,
     phantom: PhantomData<&'a U16Str>,

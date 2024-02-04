@@ -2,10 +2,10 @@ use anyhow::{anyhow, Result};
 use log::{error, info};
 use retour::static_detour;
 
-use crate::offsets::OFFSET_ON_RECV_MESSAGE;
+use crate::{offsets::OFFSET_ON_RECV_MESSAGE, wx::WeChatString};
 
 static_detour! {
-  static Test: /* extern "X" */ fn(i64,i64,i64);
+  static Test: /* extern "X" */ fn(i64, *const RecvParams, i64);
 }
 
 pub(crate) fn install_recv_hooks() -> Result<HookGuard> {
@@ -41,7 +41,13 @@ pub(crate) fn install_recv_hooks() -> Result<HookGuard> {
         Test.initialize(
             std::mem::transmute(lib_base + OFFSET_ON_RECV_MESSAGE),
             |a, b, c| {
-                info!("Call on recv: 0x{:x}, 0x{:x}, 0x{:x}", a, b, c);
+                info!("Call on recv: 0x{:x}, {:?}, 0x{:x}", a, b, c);
+                let params = b.read();
+                let full_content = params.full_content.read();
+                info!(
+                    "len: {}, max_len: {}",
+                    full_content.length, full_content.max_length
+                );
                 Test.call(a, b, c)
             },
         )?
@@ -51,6 +57,21 @@ pub(crate) fn install_recv_hooks() -> Result<HookGuard> {
     info!("hook installed");
 
     Ok(HookGuard {})
+}
+
+#[repr(C)]
+struct RecvParams {
+    f1: usize,
+    f2: usize,
+    f3: usize,
+    from_user: usize,
+    f4: usize,
+    to_user: usize,
+    content: usize,
+    f5: usize,
+    f6: usize,
+    signature: usize,
+    full_content: *const WeChatString<'static>,
 }
 
 pub(crate) struct HookGuard {}
