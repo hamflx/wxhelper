@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use log::{error, info};
 use retour::static_detour;
+use widestring::{U16Str, U16String};
 
 use crate::{offsets::OFFSET_ON_RECV_MESSAGE, wx::WeChatString};
 
@@ -46,7 +47,7 @@ pub(crate) fn install_recv_hooks() -> Result<HookGuard> {
                 let full_content = params.full_content.read();
                 info!(
                     "len: {}, max_len: {}",
-                    full_content.length, full_content.max_length
+                    full_content.len, full_content.max_len
                 );
                 Test.call(a, b, c)
             },
@@ -71,7 +72,14 @@ struct RecvParams {
     f5: usize,
     f6: usize,
     signature: usize,
-    full_content: *const WeChatString<'static>,
+    full_content: *const WeChatStr,
+}
+
+struct WeChatStr {
+    ptr: *const usize,
+    f2: usize,
+    len: usize,
+    max_len: usize,
 }
 
 pub(crate) struct HookGuard {}

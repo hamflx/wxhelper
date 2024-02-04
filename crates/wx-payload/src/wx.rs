@@ -21,7 +21,7 @@ pub(crate) struct WeChatString<'a> {
 }
 
 impl<'a> WeChatString<'a> {
-    fn new(text: &'a U16Str) -> Self {
+    pub(crate) fn new(text: &'a U16Str) -> Self {
         Self {
             ptr: text.as_ptr(),
             length: text.len() as _,
