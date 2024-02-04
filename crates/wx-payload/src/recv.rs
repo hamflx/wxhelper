@@ -44,7 +44,11 @@ pub(crate) fn install_recv_hooks() -> Result<HookGuard> {
             |a, b, c| {
                 info!("Call on recv: 0x{:x}, {:?}, 0x{:x}", a, b, c);
                 let params = b.read();
+                let from_user = params.from_user.read().to_string();
+                let content = params.content.read().to_string();
                 let full_content = params.full_content.read().to_string();
+                info!("from_user: {}", from_user);
+                info!("content: {}", content);
                 info!("full_content: {}", full_content);
                 Test.call(a, b, c)
             },
@@ -62,16 +66,33 @@ struct RecvParams {
     f1: usize,
     f2: usize,
     f3: usize,
-    from_user: usize,
+    from_user: *const SkBuiltInString,
     f4: usize,
-    to_user: usize,
-    content: usize,
+    to_user: *const SkBuiltInString,
+    content: *const SkBuiltInString,
     f5: usize,
     f6: usize,
     signature: usize,
     full_content: *const WeChatStr,
 }
 
+#[repr(C)]
+struct SkBuiltInString {
+    f1: usize,
+    inner_string: *const WeChatStr,
+}
+
+impl ToString for SkBuiltInString {
+    fn to_string(&self) -> String {
+        if self.inner_string.is_null() {
+            String::new()
+        } else {
+            unsafe { self.inner_string.read().to_string() }
+        }
+    }
+}
+
+#[repr(C)]
 struct WeChatStr {
     ptr: *const u8,
     f2: usize,
