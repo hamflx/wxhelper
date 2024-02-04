@@ -41,16 +41,16 @@ pub(crate) fn install_recv_hooks() -> Result<HookGuard> {
     unsafe {
         Test.initialize(
             std::mem::transmute(lib_base + OFFSET_ON_RECV_MESSAGE),
-            |a, b, c| {
-                info!("Call on recv: 0x{:x}, {:?}, 0x{:x}", a, b, c);
-                let params = b.read();
+            |a, recv_params, c| {
+                info!("Call on recv: 0x{:x}, {:?}, 0x{:x}", a, recv_params, c);
+                let params = recv_params.read();
                 let from_user = params.from_user.read().to_string();
                 let content = params.content.read().to_string();
                 let full_content = params.full_content.read().to_string();
                 info!("from_user: {}", from_user);
                 info!("content: {}", content);
                 info!("full_content: {}", full_content);
-                Test.call(a, b, c)
+                Test.call(a, recv_params, c)
             },
         )?
     };
@@ -102,6 +102,10 @@ struct WeChatStr {
 
 impl ToString for WeChatStr {
     fn to_string(&self) -> String {
+        info!(
+            "WeChatStr: {:?}, 0x{:x}, 0x{:x}, 0x{:x}",
+            self.ptr, self.f2, self.len, self.max_len
+        );
         if self.max_len | 0xf == 0xf {
             String::from_utf8_lossy(unsafe {
                 std::slice::from_raw_parts(&self as *const _ as *const u8, self.len)
